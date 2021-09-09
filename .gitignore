@@ -1,0 +1,7 @@
+*.zip
+.DS_Store
+**.ipynb_checkpoints
+**/__pycache__
+*.jpg
+*.png
+*.h5
