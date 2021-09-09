@@ -53,6 +53,7 @@ def make_dataframes_for_flow(img_dir, msk_dir, test_size=0.0,
         return (train_img_df, train_msk_df, test_img_df, test_msk_df)
     
     
+# Function to produce the train and val generators
 def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                      batch_size=32, **kwargs):
     """Create image & mask generators
@@ -74,9 +75,10 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
     generator:
         If val_split is 0, only the training data generator
         is returned.
-    tuple of generators:
+    tuple of generators and lists:
         If val_split > 0, training and validation generators
-        are returned.
+        are returned along with the filenames used for each
+        split.
     """
     # Instantiate the data generator specifying a validation split.
     datagen = ImageDataGenerator(validation_split=val_split, **kwargs)
@@ -91,7 +93,6 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                                                 batch_size=batch_size
                                                )
     
-    
     train_msk_gen = datagen.flow_from_dataframe(msk_df,
                                                 msk_dir,
                                                 y_col=None,
@@ -105,7 +106,7 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
     train_gen = (pair for pair in zip(train_img_gen, train_msk_gen))
     
     # If val_split is greater than 0, i.e. the data is actually split
-    # create the validation image generators
+    # create the validation data generators
     val_gen = None
     if val_split > 0:
         val_img_gen = datagen.flow_from_dataframe(img_df,
@@ -117,9 +118,6 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                                                   batch_size=batch_size
                                                  )
 
-
-
-        # Create a flow of the validation data
         val_msk_gen = datagen.flow_from_dataframe(msk_df,
                                                   msk_dir,
                                                   y_col=None,
@@ -133,6 +131,14 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
         val_gen = (pair for pair in zip(val_img_gen, val_msk_gen))
         
     if val_gen is None:
+        # If no split has been done just return train_gen
         return train_gen
     else:
-        return (train_gen, val_gen)
+        # Otherwise return train_gen and val_gen and also
+        # the file paths that fall into each split to ensure
+        # reproducibility
+        
+        train_fps = train_img_gen.filepaths
+        val_fps = val_img_gen.filepaths
+        
+        return (train_gen, val_gen, train_fps, val_fps)
