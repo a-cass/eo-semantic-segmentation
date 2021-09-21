@@ -10,7 +10,7 @@ from tensorflow.keras.models import Model
 def UNet(input_shape=(256, 256, 3), n_filters=64, n_blocks=4, model_name='UNet'):
     """Creates UNet Model
     
-    Creates and compiles a UNet architecture a la
+    Creates a UNet architecture a la
     Olaf Ronneberger et al.
     
     Parameters
