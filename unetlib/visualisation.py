@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 from numpy import ceil
 from skimage.io import imread
-from pandas.core import DataFrame
+from pandas.core.frame import DataFrame
 
 def plot_labels(img_path, label_path, overlay=False, **plot_kwargs):
     """Plot source image and label image.
