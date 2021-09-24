@@ -47,7 +47,7 @@ def UNet(input_shape=(256, 256, 3), n_filters=64, n_blocks=4, model_name='UNet')
     
     ## ---- ENCODER ----
     # An encoder block consists of CONV2D=>CONV2D=>MAXPOOL
-    enc_filters = 64
+    enc_filters = n_filters
     for block in range(blocks):
         
         # Block of Conv2D & MaxPooling2D
