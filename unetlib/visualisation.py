@@ -55,7 +55,7 @@ def plot_batch(img_batch, msk_batch=None, n_images=None, **plot_kwargs):
         row[1].imshow(msk, cmap='gray')
         row[1].set_title('Mask')
         row[1].axis('off')
-        
+
 def plot_model_history(history, metrics=['loss'], best=['min'], title=None,
                        figsize=(20,10), n_cols=2):
     """Plot model training history.
@@ -103,7 +103,7 @@ def plot_model_history(history, metrics=['loss'], best=['min'], title=None,
         raise TypeError('`history` must be dictionary or DataFrame object.')
         
     # Configure axes
-    n_rows = int(ceil(len(metrics)/n_cols))
+    n_rows = int(np.ceil(len(metrics)/n_cols))
     fig, axes = plt.subplots(n_rows, n_cols,figsize=figsize)
     
     
