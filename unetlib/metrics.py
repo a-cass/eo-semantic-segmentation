@@ -1,4 +1,4 @@
-from tensorflow.keras.metrics import MeanIOU
+from tensorflow.keras.metrics import MeanIoU
 import tensorflow.keras.backend as K
 
 class BinaryMeanIoU(MeanIoU):
