@@ -1,6 +1,6 @@
 from tensorflow.keras.layers import (concatenate,
                                      Conv2D,
-                                     Conv2DTranspose
+                                     Conv2DTranspose,
                                      Input,
                                      MaxPooling2D,
                                      UpSampling2D
