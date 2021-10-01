@@ -103,7 +103,7 @@ def plot_model_history(history, metrics=['loss'], best=['min'], title=None,
         raise TypeError('`history` must be dictionary or DataFrame object.')
         
     # Configure axes
-    n_rows = int(np.ceil(len(metrics)/n_cols))
+    n_rows = int(ceil(len(metrics)/n_cols))
     fig, axes = plt.subplots(n_rows, n_cols,figsize=figsize)
     
     
