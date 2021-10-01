@@ -89,6 +89,7 @@ def UNet(input_shape=(256, 256, 3), n_filters=64, n_blocks=4, model_name='UNet')
     # is the positive class e.g. foreground, water etc.
     out_ = Conv2D(1, 1, activation='sigmoid')(x)
     
+    model_name = f'{model_name}_f{n_filters}_b{n_blocks}'
     model = Model(inputs=in_, outputs=out_, name=model_name)
     
     return model
