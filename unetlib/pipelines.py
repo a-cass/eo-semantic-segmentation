@@ -11,7 +11,7 @@ from unetlib.preprocessing import make_dataframes_for_flow, make_img_msk_flows
 def train_unet(model, nwpu_data_dir, nwpu_mask_dir, batch_size=16, epochs=100,
                optimiser='RMSProp', learning_rate=None, save_as=None):
     """
-    Convenience wrapper to train a model on the NWPU data.
+    Conveniennce wrapper to train a model on the NWPU data.
 
     Parameters
     ----------
