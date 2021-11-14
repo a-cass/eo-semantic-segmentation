@@ -3,8 +3,9 @@ from tensorflow.keras.layers import (concatenate,
                                      Conv2DTranspose,
                                      Input,
                                      MaxPooling2D,
-                                     UpSampling2D
+                                     BatchNormalization
                                     )
+from tensorflow.keras.activations import get as get_activation
 from tensorflow.keras.models import Model
 
 def UNet(input_shape=(256, 256, 3), n_filters=64, n_blocks=4, model_name='UNet'):
@@ -96,22 +97,25 @@ def UNet(input_shape=(256, 256, 3), n_filters=64, n_blocks=4, model_name='UNet')
 
 
 # Convenience function for adding BN to a Conv2D layer
-def conv2D_BN(x, filters, kernel_size=(3, 3), activation='relu', padding='same', bn_pos='after'):
+def conv2D_BN(x, filters, kernel_size=(3, 3), activation='relu',
+              padding='same', bn_pos='after'):
     if bn_pos.lower() == 'after':
-        x = Conv2D(filters=filters, kernel_size=kernel_size, activation=activation, padding=padding)(x)
-        x = tf.keras.layers.BatchNormalization()(x)
+        x = Conv2D(filters=filters, kernel_size=kernel_size,
+                   activation=activation, padding=padding)(x)
+        x = BatchNormalization()(x)
     elif bn_pos.lower() == 'before':
         x = Conv2D(filters=filters, kernel_size=kernel_size, padding=padding)(x)
-        x = tf.keras.layers.BatchNormalization()(x)
-        x = tf.keras.activations.get(activation)(x)
+        x = BatchNormalization()(x)
+        x = get_activation(activation)(x)
     else:
         raise ValueError('`bn_pos` must be one of "after", "before".')
     
     return x
 
+
 # UNet fuction including batchnorm
 def UNet_BN(input_shape=(256, 256, 3), n_filters=64, n_blocks=4, bn_pos='after',
-         model_name='UNet_BN'):
+            model_name='UNet_BN'):
     """Creates UNet Model
     
     Creates a UNet architecture a la
