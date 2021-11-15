@@ -1,5 +1,7 @@
 from tensorflow.keras.metrics import MeanIoU
+from tensorflow import int32
 import tensorflow.keras.backend as K
+
 
 class BinaryMeanIoU(MeanIoU):
     """Computes the mean Intersection-Over-Union metric.
@@ -27,13 +29,14 @@ class BinaryMeanIoU(MeanIoU):
     
     """
     def __init__(self, threshold=0.5, name=None, dtype=None):
-        super(BinaryMeanIoU, self).__init__(num_classes=2, name=name, dtype=dtype)
+        super(BinaryMeanIoU, self).__init__(num_classes=2, name=name,
+                                            dtype=dtype)
         self.threshold = threshold
         
     def update_state(self, y_true, y_pred, sample_weight=None):
         # If predictions are not floating point they are just passed through
         if y_pred.dtype.is_floating:
             # Apply the threshold value
-            y_pred = K.cast(y_pred > self.threshold, tf.int32)
+            y_pred = K.cast(y_pred > self.threshold, int32)
         # Pass new y_pred to standard MeanIoU function
         super(BinaryMeanIoU, self).update_state(y_true, y_pred, sample_weight)
