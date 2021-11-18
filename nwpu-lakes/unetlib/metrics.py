@@ -28,7 +28,7 @@ class BinaryMeanIoU(MeanIoU):
     dtype: TensorFlow data type, optional
     
     """
-    def __init__(self, threshold=0.5, name=None, dtype=None):
+    def __init__(self, threshold=0.5, name='binary_mean_iou', dtype=None):
         super(BinaryMeanIoU, self).__init__(num_classes=2, name=name,
                                             dtype=dtype)
         self.threshold = threshold
