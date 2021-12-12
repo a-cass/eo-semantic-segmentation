@@ -131,12 +131,11 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
         val_gen = (pair for pair in zip(val_img_gen, val_msk_gen))
         
     if val_gen is None:
-        # If no split has been done just return train_gen
-        return train_gen
+        # If no split has been done just return train_gen and train filepaths
+        return (train_gen, train_img_gen.filepaths)
     else:
         # Otherwise return train_gen and val_gen and also
-        # the file paths that fall into each split to ensure
-        # reproducibility
+        # the file paths that fall into each split
         
         train_fps = train_img_gen.filepaths
         val_fps = val_img_gen.filepaths
@@ -261,12 +260,11 @@ def make_img_msk_flows(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
         val_gen = (pair for pair in zip(val_img_gen, val_msk_gen))
         
     if val_gen is None:
-        # If no split has been done just return train_gen
-        return train_gen
+        # If no split has been done just return train_gen and train filepaths
+        return (train_gen, train_img_gen.filepaths)
     else:
         # Otherwise return train_gen and val_gen and also
-        # the file paths that fall into each split to ensure
-        # reproducibility
+        # the file paths that fall into each split
         
         train_fps = train_img_gen.filepaths
         val_fps = val_img_gen.filepaths
