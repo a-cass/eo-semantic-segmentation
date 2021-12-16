@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+
 def get_lakes_with_masks(img_dir, msk_dir, return_masks=True, img_ext='jpg',
                          msk_ext='png'):
     """Determine lake images that have corresponding masks.
@@ -12,10 +13,8 @@ def get_lakes_with_masks(img_dir, msk_dir, return_masks=True, img_ext='jpg',
 
     Parameters
     ----------
-    img_dir: str
-        Path to image directory.
-    msk_dir: str
-        Path to mask directory.
+    img_dir, msk_dir: str
+        Paths to image and mask directories.
     return_masks: bool, default=True
         If `True` also return list of mask file names.
     img_ext: str, default='jpg'
@@ -44,22 +43,41 @@ def get_lakes_with_masks(img_dir, msk_dir, return_masks=True, img_ext='jpg',
     return result
 
 
-def make_dataframes_for_flow(img_dir, msk_dir, test_size=0.0,
+def make_dataframes_for_flow(img_dir, msk_dir, test_split=0.0,
                              random_state=None):
-    """
+    """Generate image and mask dataframes
+
+    Parameters
+    ----------
+    img_dir, msk_dir: str
+        Paths to image and mask directories.
+    test_split: float, default=0.0
+        Proportion of images to reserve for the test set.
+    random_state: int, optional
+        Seed for reproducibility. By default no
+        seed is set and results will vary between
+        runs.
+
+    Returns
+    -------
+    tuple of pandas.core.frame.DataFrame
+        If test size is 0 just the image and masks
+        DataFrames are returned. Otherwise the data
+        is split and this function will return, in
+        this order, DataFrames for the training images,
+        training masks, testing images, testing masks.
     """
     valid_images, valid_masks = get_lakes_with_masks(img_dir, msk_dir)
     
-    img_df = pd.DataFrame({'filename':valid_images})
-    msk_df = pd.DataFrame({'filename':valid_masks})
-    
-    test_idxs = None
-    if test_size == 0:
-        return (img_df, msk_df)
+    img_df = pd.DataFrame({'filename': valid_images})
+    msk_df = pd.DataFrame({'filename': valid_masks})
+
+    if test_split == 0:
+        return img_df, msk_df
         
     else:
         # Get train/test indices
-        test_samples = int(img_df.shape[0] * test_size)
+        test_samples = int(img_df.shape[0] * test_split)
         test_idxs = img_df.sample(test_samples, random_state=random_state).index
         train_idxs = img_df.index.difference(test_idxs)
         
@@ -70,36 +88,49 @@ def make_dataframes_for_flow(img_dir, msk_dir, test_size=0.0,
         test_img_df = img_df.iloc[test_idxs]
         test_msk_df = msk_df.iloc[test_idxs]
         
-        return (train_img_df, train_msk_df, test_img_df, test_msk_df)
+        return train_img_df, train_msk_df, test_img_df, test_msk_df
     
     
 # Function to produce the train and val generators
 def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                      batch_size=32, **kwargs):
-    """Create image & mask generators
-    
+    """Create image and mask generators.
+
+    The ordering of files in `img_df` and `msk_df` must match.
+    For example, the first row of `msk_df` should correspond
+    to the mask for the first image in `img_df`.
+
+    If this is not the case the generators will fail to generate
+    flows of matching image and mask pairs.
+
     Parameters
     ----------
-    img_df: pd.DataFrame
-    msk_df: pd.DataFrame
-    img_dir: str
-    msk_dir: str
-    val_split: float, optional
-    batch_size: int, optional
-    **kwargs: dict
+    img_df, msk_df: pandas.core.frame.DataFrame
+        DataFrames containing image and mask file names respectively.
+        These must be stored in a `filename` column.
+    img_dir, msk_dir: str
+        Paths to image and mask directories.
+    val_split: float, default=0.0
+        Proportion of images to reserve for the validation set.
+    batch_size: int, default=32
+        Number of image/mask pairs in each batch.
+    **kwargs: dict, optional
         Other keyword arguments that will be passed to the
-        ImageDataGenerator
-        
+        `ImageDataGenerator`. Refer to the `ImageDataGenerator`
+        documentation for a list of all possible arguments.
+
     Returns
     -------
-    generator:
+    tuple of (generator, list):
         If val_split is 0, only the training data generator
-        is returned.
-    tuple of generators and lists:
+        and file names are returned.
+    tuple of (generator, generator, list, list):
         If val_split > 0, training and validation generators
         are returned along with the filenames used for each
-        split.
-    """
+        split. The returned order is training generator,
+        validation generator, training file names, validation
+        file names.
+        """
     # Instantiate the data generator specifying a validation split.
     datagen = ImageDataGenerator(validation_split=val_split, **kwargs)
     
@@ -152,7 +183,7 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
         
     if val_gen is None:
         # If no split has been done just return train_gen and train filepaths
-        return (train_gen, train_img_gen.filepaths)
+        return train_gen, train_img_gen.filepaths
     else:
         # Otherwise return train_gen and val_gen and also
         # the file paths that fall into each split
@@ -160,8 +191,9 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
         train_fps = train_img_gen.filepaths
         val_fps = val_img_gen.filepaths
         
-        return (train_gen, val_gen, train_fps, val_fps)
-    
+        return train_gen, val_gen, train_fps, val_fps
+
+
 # Function to handle data augmentation
 def make_img_msk_flows(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                        batch_size=32, aug_dict=None, aug_seed=42,
