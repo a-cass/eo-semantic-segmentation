@@ -3,15 +3,35 @@ import os
 import pandas as pd
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-def get_lakes_with_masks(img_dir, mask_dir, return_masks=True, img_ext='jpg', mask_ext='png'):
-    """ Determine lake images that have corresponding masks.
-    
+def get_lakes_with_masks(img_dir, msk_dir, return_masks=True, img_ext='jpg',
+                         msk_ext='png'):
+    """Determine lake images that have corresponding masks.
+
     Valid images are those that have a corresponding mask in
     mask_dir.
-    
+
+    Parameters
+    ----------
+    img_dir: str
+        Path to image directory.
+    msk_dir: str
+        Path to mask directory.
+    return_masks: bool, default=True
+        If `True` also return list of mask file names.
+    img_ext: str, default='jpg'
+        Extension of image files. Used for file selection.
+    msk_ext: str, default='png'
+        Extension of mask files. Used for file selection.
+
+    Returns
+    -------
+    tuple of lists or list
+        List(s) of file names for valid images and their
+        masks. If `return_masks` is `False`, only a single
+        list of image file names is returned.
     """
     img_fns = sorted([fn for fn in os.listdir(img_dir) if fn.endswith(img_ext)]) 
-    msk_fns = sorted([fn for fn in os.listdir(mask_dir) if fn.endswith(mask_ext)])
+    msk_fns = sorted([fn for fn in os.listdir(msk_dir) if fn.endswith(msk_ext)])
     
     img_fns = sorted(filter(lambda fn: f'{os.path.splitext(fn)[0]}_mask.png' in msk_fns,
                             img_fns)
