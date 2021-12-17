@@ -1,7 +1,84 @@
 import numpy as np
 import os
 import pandas as pd
+from skimage.draw import polygon
+from skimage.io import imsave
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+
+def labels2mask(img_path, labels_dict, out_path=None, out_ext=None,
+                mask_val=255, dtype=np.uint8, overwrite=True, **kwargs):
+    """Convert label coordinates to label image.
+
+    The coordinates must be in units of image pixels.
+
+    Parameters
+    ----------
+    img_path : str
+        Path to input image.
+    labels_dict : dict
+        Dictionary of image labels. Top level keys
+        should be image file names and values should
+        be dictionaries containing image label information
+        under the key 'regions'.
+    out_path : str, optional
+        Path to save mask image. By default the mask image
+        is saved to the same direction as `img_path` with
+        the suffix '_mask'.
+    out_ext : str, optional
+        Output image extension e.g. 'png', 'jpg'. By default
+        this will match the input image.
+    mask_val : int, default=255
+        Pixel value to assign to masked areas.
+    dtype : subtype of numpy.number, default=numpy.uint8
+        Output image data type e.g. numpy.uint8, numpy.float.
+    overwrite : bool, default=True
+        Overwrite 'out_path' if it already exists.
+    **kwargs : dict, optional
+        Keyword arguments passed to `skimage.io.imsave`.
+        Refer to the `skimage.io.imsave` documentation for
+        a list of all possible arguments.
+
+    Returns
+    -------
+    str
+        Path to output image file. Same as `out_path` if it
+        is not None.
+    """
+    # launder output file path
+    if out_path is None:
+        out_path = '_mask'.join(os.path.splitext(img_path))
+
+    if out_ext:
+        out_path = os.path.splitext(out_path)[0] + f'.{out_ext.lower()}'
+
+    # handle overwrite
+    if os.path.exists(out_path):
+        if not overwrite:
+            return out_path
+
+    # get water polygon info
+    img_name = os.path.basename(img_path)
+    regions = labels_dict[img_name]['regions']
+
+    # create mask array
+    mask_shp = imread(img_path).shape[
+               :2]  # output is only 2D as opposed to the 3 channel input image
+    mask_arr = zeros(mask_shp, dtype=dtype)
+
+    # Cycle through regions and set corresponsing pixels to mask_val
+    for region_num, region_shape in regions.items():
+        x = region_shape['shape_attributes']['all_points_x']
+        y = region_shape['shape_attributes']['all_points_y']
+
+        # The skimage polygon function requires coordinates as rows, cols
+        r, c = polygon(y, x, mask_shp)
+        mask_arr[r, c] = mask_val
+
+    # write to new image
+    imsave(out_path, mask_arr, check_contrast=False, **kwargs)
+
+    return out_path
 
 
 def get_lakes_with_masks(img_dir, msk_dir, return_masks=True, img_ext='jpg',

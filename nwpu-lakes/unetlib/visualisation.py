@@ -3,15 +3,28 @@ from numpy import ceil
 from skimage.io import imread
 from pandas.core.frame import DataFrame
 
-def plot_labels(img_path, label_path, overlay=False, **plot_kwargs):
+
+def plot_labels(img_path, label_path, overlay=False, **kwargs):
     """Plot source image and label image.
+
+    Parameters
+    ----------
+    img_path, label_path : str
+        Paths to an image and its corresponding label.
+    overlay : bool, default=False
+        If true, the mask is plotted on the same axis as the image
+        with some transparency applied. Otherwise the image and mask are
+        plotted on separate axes.
+    **kwargs : dict, optional
+        Keyword arguments to be passed to `matplotlib.pyplot.subplots`.
+        Refer to the `matplotlib.pyplot.subplots` documentation for
+        a list of all possible arguments.
     """
-    
     original = imread(img_path)
     labelled = imread(label_path)
     
     if not overlay:
-        fig, axes = plt.subplots(1,2, **plot_kwargs)
+        fig, axes = plt.subplots(1, 2, **kwargs)
         axes = axes.flatten()
         
         axes[0].imshow(original)
@@ -23,11 +36,12 @@ def plot_labels(img_path, label_path, overlay=False, **plot_kwargs):
         axes[1].set_title('Labelled')
         
     else:
-        fig, ax = plt.subplots(1,1, **plot_kwargs)
+        fig, ax = plt.subplots(1,1, **kwargs)
         ax.imshow(original)
         ax.imshow(labelled, cmap='bwr_r', alpha=0.4)
         ax.axis('off')
-        
+
+
 def plot_batch(img_batch, msk_batch=None, n_images=None, **plot_kwargs):
     """
     """
