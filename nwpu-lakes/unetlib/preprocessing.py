@@ -166,12 +166,16 @@ def make_dataframes_for_flow(img_dir, msk_dir, test_split=0.0,
         test_msk_df = msk_df.iloc[test_idxs]
         
         return train_img_df, train_msk_df, test_img_df, test_msk_df
-    
-    
-# Function to produce the train and val generators
-def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
-                     batch_size=32, **kwargs):
-    """Create image and mask generators.
+
+
+def make_data_generators(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
+                         batch_size=32, rescale=1 / 255, aug_dict=None,
+                         aug_seed=42):
+    """Create image & mask data generators.
+
+    Optionally augmentation can be applied. Note that
+    augmentations apply only to the training data not
+    the validation data.
 
     The ordering of files in `img_df` and `msk_df` must match.
     For example, the first row of `msk_df` should correspond
@@ -191,10 +195,17 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
         Proportion of images to reserve for the validation set.
     batch_size: int, default=32
         Number of image/mask pairs in each batch.
-    **kwargs: dict, optional
-        Other keyword arguments that will be passed to the
-        `ImageDataGenerator`. Refer to the `ImageDataGenerator`
-        documentation for a list of all possible arguments.
+    rescale: float, default=1/255
+        Scaling to apply to image and mask data. Defaults to
+        1/255 for rescaling 8bit unit data.
+    aug_dict: dict, optional
+        Keyword argument dictionary for augmentations.
+        See `ImageDataGenerator` for valid keywords.
+        Defaults to None resulting in no augmentations.
+    aug_seed: int, optional
+        Random seed for augmentations. Must be provided if
+        use augmentations to maintain the alignment of images
+        and masks. Only used if aug_dict specifies augmentations.
 
     Returns
     -------
@@ -207,126 +218,17 @@ def make_img_datagen(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
         split. The returned order is training generator,
         validation generator, training file names, validation
         file names.
-        """
-    # Instantiate the data generator specifying a validation split.
-    datagen = ImageDataGenerator(validation_split=val_split, **kwargs)
-    
-    # Create the training data generators first
-    train_img_gen = datagen.flow_from_dataframe(img_df,
-                                                img_dir,
-                                                y_col=None,
-                                                class_mode=None,
-                                                shuffle=None,
-                                                subset='training',
-                                                batch_size=batch_size
-                                               )
-    
-    train_msk_gen = datagen.flow_from_dataframe(msk_df,
-                                                msk_dir,
-                                                y_col=None,
-                                                class_mode=None,
-                                                shuffle=None,
-                                                subset='training',
-                                                color_mode='grayscale',
-                                                batch_size=batch_size
-                                               )
-    # Combine
-    train_gen = (pair for pair in zip(train_img_gen, train_msk_gen))
-    
-    # If val_split is greater than 0, i.e. the data is actually split
-    # create the validation data generators
-    val_gen = None
-    if val_split > 0:
-        val_img_gen = datagen.flow_from_dataframe(img_df,
-                                                  img_dir,
-                                                  y_col=None,
-                                                  class_mode=None,
-                                                  shuffle=None,
-                                                  subset='validation',
-                                                  batch_size=batch_size
-                                                 )
-
-        val_msk_gen = datagen.flow_from_dataframe(msk_df,
-                                                  msk_dir,
-                                                  y_col=None,
-                                                  class_mode=None,
-                                                  shuffle=None,
-                                                  subset='validation',
-                                                  color_mode='grayscale',
-                                                  batch_size=batch_size
-                                                 )
-        
-        val_gen = (pair for pair in zip(val_img_gen, val_msk_gen))
-        
-    if val_gen is None:
-        # If no split has been done just return train_gen and train filepaths
-        return train_gen, train_img_gen.filepaths
-    else:
-        # Otherwise return train_gen and val_gen and also
-        # the file paths that fall into each split
-        
-        train_fps = train_img_gen.filepaths
-        val_fps = val_img_gen.filepaths
-        
-        return train_gen, val_gen, train_fps, val_fps
-
-
-# Function to handle data augmentation
-def make_img_msk_flows(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
-                       batch_size=32, aug_dict=None, aug_seed=42,
-                       rescale=1/255
-                      ):
-    """Create image & mask flows with optional augmentations.
-    
-    Parameters
-    ----------
-    img_df: pd.DataFrame
-        DataFrame contaning the image filenames in column
-        'filename'.
-    msk_df: pd.DataFrame
-        DataFrame contaning the mask filenames in column
-        'filename'.
-    img_dir: str
-        Path to the images directory.
-    msk_dir: str
-        Path to the masks directory
-    val_split: float, optional
-        Proportion of validation split. Defaults to 0 for
-        no validation split.
-    batch_size: int, optional
-        Number of samples in each batch. Defaults to 32.
-    aug_dict: dict, optional
-        Keyword argument dictionary for augmentations.
-        See `ImageDataGenerator` for valid keywords.
-        Defaults to None resulting in no augmentations.
-    aug_seed: int, optional
-        Random seed for augmentations. Must be provided if
-        use augmentations to maintain the alignment of images
-        and masks. Only used if aug_dict specifies augmentations.
-    rescale: float, optional
-        Scaling to apply to image and mask data. Defaults to
-        1/255 for rescaling 8bit unit data.
-    Returns
-    -------
-    generator:
-        If val_split is 0, only the training data generator
-        is returned.
-    tuple of generators and lists:
-        If val_split > 0, training and validation generators
-        are returned along with the filenames used for each
-        split.
     """
-    
     # Initialise the datagen arguments
     dg_init_args = {'validation_split': val_split}
     augment = aug_dict is not None and len(aug_dict) > 0
     if augment:
         # add the augmentation arguments if provided
         dg_init_args.update(aug_dict)
-    
+
     # Instantiate the data generator
     datagen = ImageDataGenerator(**dg_init_args, rescale=rescale)
-    
+
     # Create the training data image and mask flows
     # Note that the seed is used if augmentations are
     # being used
@@ -337,9 +239,9 @@ def make_img_msk_flows(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                                                 shuffle=None,
                                                 subset='training',
                                                 batch_size=batch_size,
-                                                seed = aug_seed if augment else None
-                                               )
-    
+                                                seed=aug_seed if augment else None
+                                                )
+
     train_msk_gen = datagen.flow_from_dataframe(msk_df,
                                                 msk_dir,
                                                 y_col=None,
@@ -348,11 +250,11 @@ def make_img_msk_flows(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                                                 subset='training',
                                                 color_mode='grayscale',
                                                 batch_size=batch_size,
-                                                seed = aug_seed if augment else None
-                                               )
+                                                seed=aug_seed if augment else None
+                                                )
     # Combine
     train_gen = (pair for pair in zip(train_img_gen, train_msk_gen))
-    
+
     # If val_split is greater than 0, i.e. the data is actually split
     # create the validation data generators
     val_gen = None
@@ -366,7 +268,7 @@ def make_img_msk_flows(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
             # If no augmentations are applied to training data
             # resuse the training datagenerator
             val_datagen = datagen
-            
+
         val_img_gen = val_datagen.flow_from_dataframe(img_df,
                                                       img_dir,
                                                       y_col=None,
@@ -374,7 +276,7 @@ def make_img_msk_flows(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                                                       shuffle=None,
                                                       subset='validation',
                                                       batch_size=batch_size
-                                                     )
+                                                      )
 
         val_msk_gen = val_datagen.flow_from_dataframe(msk_df,
                                                       msk_dir,
@@ -384,18 +286,18 @@ def make_img_msk_flows(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                                                       subset='validation',
                                                       color_mode='grayscale',
                                                       batch_size=batch_size
-                                                     )
-        
+                                                      )
+
         val_gen = (pair for pair in zip(val_img_gen, val_msk_gen))
-        
+
     if val_gen is None:
         # If no split has been done just return train_gen and train filepaths
-        return (train_gen, train_img_gen.filepaths)
+        return train_gen, train_img_gen.filepaths
     else:
         # Otherwise return train_gen and val_gen and also
         # the file paths that fall into each split
-        
+
         train_fps = train_img_gen.filepaths
         val_fps = val_img_gen.filepaths
-        
-        return (train_gen, val_gen, train_fps, val_fps)
+
+        return train_gen, val_gen, train_fps, val_fps

@@ -1,3 +1,4 @@
+import numpy as np
 from matplotlib import pyplot as plt
 from numpy import ceil
 from skimage.io import imread
@@ -42,36 +43,66 @@ def plot_labels(img_path, label_path, overlay=False, **kwargs):
         ax.axis('off')
 
 
-def plot_batch(img_batch, msk_batch=None, n_images=None, **plot_kwargs):
-    """
+def plot_batch(img_batch, msk_batch=None, n_images=None, n_cols=2,
+               figsize=(20, 10)):
+    """Plot batch of images
+
+    Parameters
+    ----------
+    img_batch: numpy.ndarray or tensorflow.Tensor
+        Batch of images. Dimensions should be (N, H, W, C).
+    msk_batch: numpy.ndarray or tensorflow.Tensor, optional
+        Batch of mask images corresponding to each image in
+        `img_batch`.
+    n_images: int, optional
+        Number of images (or image/mask pairs) to plot. By
+        default all images are plotted.
+    n_cols: int, default=2
+        Number of columns in plot. Number of rows will be
+        determined from this.
+    figsize: tuple of int, default=(20, 10)
+        Width and height of figure in inches.
     """
     # Batches must be of dimensions N,H,W,C
-    assert img_batch.ndim == msk_batch.ndim == 4
-    
-    # Batches must be same size
-    assert img_batch.shape[0] == msk_batch.shape[0]
-    
-    # Set number of rows to 1 per image/mask pair
-    n_rows = n_images or img_batch.shape[0]
-    n_cols = 2 # image , mask
-    
-    fig, axes = plt.subplots(n_rows, 2, **plot_kwargs)
-    
-    for i, row in zip(range(n_images), axes):
+    assert img_batch.ndim == 4
+
+    if msk_batch is not None:
+        assert msk_batch.ndim == 4
+
+        # Batches must contain the same number of images.
+        assert len(img_batch) == len(msk_batch)
+
+        # Interleave masks with images
+        img_batch = np.insert(img_batch, np.arange(1, len(msk_batch) + 1),
+                              msk_batch, axis=0)
+
+        # Double n_images to account for masks
+        n_images *= 2
+
+    # Set number of rows
+    n_rows = int(np.ceil(n_images / n_cols))
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+    axes = axes.ravel()
+
+    for i, ax in zip(range(n_images), axes):
         img = img_batch[i]
-        msk = msk_batch[i]
-        if msk.shape[-1] == 1:
-            msk = msk[:,:,0]
-        
-        row[0].imshow(img)
-        row[0].set_title('Image')
-        row[0].axis('off')
-        row[1].imshow(msk, cmap='gray')
-        row[1].set_title('Mask')
-        row[1].axis('off')
+        cmap = None
+        if img.shape[-1] == 1:
+            img = img[:, :, 0]
+            cmap = 'gray'
+
+        ax.imshow(img, cmap=cmap)
+        ax.axis('off')
+
+    # Turn off any axes that do not have data
+    for ax in axes:
+        if not ax.has_data():
+            ax.axis('off')
+
 
 def plot_model_history(history, metrics=['loss'], best=['min'], title=None,
-                       figsize=(20,10), n_cols=2):
+                       n_cols=2, figsize=(20, 10)):
     """Plot model training history.
     
     Creates a plot of the results of each metric on the training
@@ -83,30 +114,28 @@ def plot_model_history(history, metrics=['loss'], best=['min'], title=None,
     history: pd.DataFrame or dict
         A model's history in either dictionary or DataFrame
         format.
-    metrics: list of str, optional
+    metrics: list of str, default=['loss']
         List of metrics to plot, one per axis. By default only
-        the loss/val_loss will be plotted
-    best: list of str, optional
+        the loss/val_loss will be plotted. For available metrics
+        examin the columns of `history`.
+    best: list of str, default=['min']
         Method for determining the best metric value. Must align
         with the metrics list i.e. metrics[0] will have its best
         value determined by best[0]. By default just the minimum
         is used for the loss metric. Options are "min" or "max".
     title: str, optional
         Title for the figure. Default setting is to use no title.
-    figsize: tuple of int, optional
-        Width and height of figure in inches. Default dimensions
-        are (20, 10)
-    n_cols: int, optional
+    n_cols: int, default=2
         Number of columns to split the metrics over. Number of rows
-        will be determined from this. Default is 2 columns
-        
+        will be determined from this.
+    figsize: tuple of int, default=(20, 10)
+        Width and height of figure in inches.
+
     Returns
     -------
     matplotlib.figure.Figure
         A figure containing the axes with the metrics.
-    
     """
-    
     if isinstance(history, DataFrame):
         pass
         
@@ -118,14 +147,14 @@ def plot_model_history(history, metrics=['loss'], best=['min'], title=None,
         
     # Configure axes
     n_rows = int(ceil(len(metrics)/n_cols))
-    fig, axes = plt.subplots(n_rows, n_cols,figsize=figsize)
-    
-    
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+
     # Record what values are best for each metric
     if best is None or len(best) != len(metrics):
-        raise ValueError('`best` must contain a method for each metric in `metrics`.')
-    best_vals = {m:b for m,b in zip(metrics, best)}
-    invalid_best = set(best_vals.values()).difference(set(['min','max']))
+        raise ValueError('`best` must contain a method for each metric'
+                         'in `metrics`.')
+    best_vals = {m: b for m, b in zip(metrics, best)}
+    invalid_best = set(best_vals.values()).difference(set(['min', 'max']))
     if len(invalid_best) > 0:
         raise ValueError('`best` must contain either "min" or "max" '
                          f'but user specified: {",".join(invalid_best)}')
@@ -144,17 +173,16 @@ def plot_model_history(history, metrics=['loss'], best=['min'], title=None,
         # Plot best value and lines
         ax.plot([best_x] * 2, [0, best_y], color='g')
         ax.plot([0, best_x], [best_y] * 2)
-        ax.scatter(best_x, best_y, s=100, marker='o',color='g')
+        ax.scatter(best_x, best_y, s=100, marker='o', color='g')
         
         # Set the axis title
         ax.set_title((f'{m.capitalize()}\n{best_vals[m].capitalize()}'
-                 f'@ Epoch:{best_x}, Val:{best_y:.4f}'))
+                      f'@ Epoch:{best_x}, Val:{best_y:.4f}'))
         
         # Set the axis limits
-        ax.set_ylim(0,1)
-        ax.set_xlim(0,len(history))
-        
-    
+        ax.set_ylim(0, 1)
+        ax.set_xlim(0, len(history))
+
     # Set figure title
     fig.suptitle(title)
     
