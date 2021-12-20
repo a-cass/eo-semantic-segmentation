@@ -4,7 +4,7 @@ import tensorflow.keras.backend as K
 
 
 class BinaryMeanIoU(MeanIoU):
-    """Computes the mean Intersection-Over-Union metric.
+    """Computes the mean Intersection Over Union metric.
     
     The standard MeanIoU metric assumes the true values and
     predictions are integers corresponding to class numbers.
@@ -16,17 +16,15 @@ class BinaryMeanIoU(MeanIoU):
     value used to map the Sigmoid activations to the classes
     prior to calculating the Mean IoU.
     
-    
     Parameters
     ----------
-    threshold: float, optional
+    threshold: float, default=0.5
         Probability threshold value. Values greater than or equal
-        to this will be assigned to the positive class, 1. Default
-        is 0.5.
-    name: str, optional
+        to this will be assigned to the positive class, 1.
+    name: str, default='binary_mean_iou'
          Name of the metric instance.
     dtype: TensorFlow data type, optional
-    
+        Data type of the metric result.
     """
     def __init__(self, threshold=0.5, name='binary_mean_iou', dtype=None):
         super(BinaryMeanIoU, self).__init__(num_classes=2, name=name,

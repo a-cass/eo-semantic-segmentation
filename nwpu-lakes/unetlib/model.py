@@ -8,7 +8,9 @@ from tensorflow.keras.layers import (concatenate,
 from tensorflow.keras.activations import get as get_activation
 from tensorflow.keras.models import Model
 
-def UNet(input_shape=(256, 256, 3), n_filters=64, n_blocks=4, model_name='UNet'):
+
+def UNet(input_shape=(256, 256, 3), n_filters=64, n_blocks=4,
+         model_name='UNet'):
     """Creates UNet Model
     
     Creates a UNet architecture a la
@@ -19,13 +21,13 @@ def UNet(input_shape=(256, 256, 3), n_filters=64, n_blocks=4, model_name='UNet')
     input_shape: tuple of int:
         The dimensions of the input images in the form
         (H,W,C).
-    n_filters: int, optional
+    n_filters: int, default=64
         The number of filters to use in the first convolution
         block. Default is 64 as used in Ronneberger et al.
-    n_blocks: int, optional
+    n_blocks: int, default=4
         The number of blocks implemented on each path. Default
         is 4 as used in Ronneberger et al.
-    model_name: string, optional
+    model_name: string, default=UNet
         A name to assign to the model.
         
     Returns
