@@ -2,7 +2,7 @@ import numpy as np
 import os
 import pandas as pd
 from skimage.draw import polygon
-from skimage.io import imsave
+from skimage.io import imread, imsave
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
@@ -62,9 +62,9 @@ def labels2mask(img_path, labels_dict, out_path=None, out_ext=None,
     regions = labels_dict[img_name]['regions']
 
     # create mask array
-    mask_shp = imread(img_path).shape[
-               :2]  # output is only 2D as opposed to the 3 channel input image
-    mask_arr = zeros(mask_shp, dtype=dtype)
+    # output is only 2D as opposed to the 3 channel input image
+    mask_shp = imread(img_path).shape[:2]
+    mask_arr = np.zeros(mask_shp, dtype=dtype)
 
     # Cycle through regions and set corresponsing pixels to mask_val
     for region_num, region_shape in regions.items():
