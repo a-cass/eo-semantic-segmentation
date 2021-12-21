@@ -170,7 +170,7 @@ def make_dataframes_for_flow(img_dir, msk_dir, test_split=0.0,
 
 def make_data_generators(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                          batch_size=32, rescale=1 / 255, aug_dict=None,
-                         aug_seed=42):
+                         aug_seed=None):
     """Create image & mask data generators.
 
     Optionally augmentation can be applied. Note that
