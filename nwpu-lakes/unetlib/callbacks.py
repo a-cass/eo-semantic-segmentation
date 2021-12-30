@@ -1,6 +1,7 @@
 from tensorflow.keras.callbacks import Callback
 import time
 
+
 class TrainingTimer(Callback):
     """Times the model's training process.
     """
@@ -9,10 +10,13 @@ class TrainingTimer(Callback):
         self.logs = {}
 
     def on_train_begin(self, logs=None):
+        # Record start time
         self.logs['start_time'] = time.time()
 
     def on_train_end(self, logs=None):
+        # Record stop time
         self.logs['stop_time'] = time.time()
+        # Calculate and record runtime
         self.logs['runtime'] = self.logs['stop_time'] - self.logs['start_time']
 
     def runtime_seconds(self):
