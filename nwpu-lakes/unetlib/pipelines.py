@@ -10,7 +10,7 @@ from .preprocessing import make_dataframes_for_flow, make_data_generators
 def train_unet(model, img_dir, msk_dir, batch_size=16, epochs=100,
                optimiser='RMSProp', learning_rate=None, callbacks=None,
                save_as=None, save_dir=None):
-    f"""Train U-Net model.
+    """Train U-Net model.
 
     Train `model` and save history and best weights.
 

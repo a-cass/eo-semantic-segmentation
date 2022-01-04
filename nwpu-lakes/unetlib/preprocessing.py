@@ -266,7 +266,7 @@ def make_data_generators(img_df, msk_df, img_dir, msk_dir, val_split=0.0,
                                              rescale=rescale)
         else:
             # If no augmentations are applied to training data
-            # resuse the training datagenerator
+            # reuse the training datagenerator
             val_datagen = datagen
 
         val_img_gen = val_datagen.flow_from_dataframe(img_df,

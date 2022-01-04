@@ -66,6 +66,9 @@ def plot_batch(img_batch, msk_batch=None, n_images=None, n_cols=2,
     # Batches must be of dimensions N,H,W,C
     assert img_batch.ndim == 4
 
+    # Set n_images to length of batch if not provided.
+    n_images = n_images or len(img_batch)
+
     if msk_batch is not None:
         assert msk_batch.ndim == 4
 
