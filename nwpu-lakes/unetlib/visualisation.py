@@ -1,8 +1,7 @@
-import numpy as np
 from matplotlib import pyplot as plt
-from numpy import ceil
-from skimage.io import imread
+import numpy as np
 from pandas.core.frame import DataFrame
+from skimage.io import imread
 
 
 def plot_labels(img_path, label_path, overlay=False, **kwargs):
@@ -149,7 +148,7 @@ def plot_model_history(history, metrics=['loss'], best=['min'], title=None,
         raise TypeError('`history` must be dictionary or DataFrame object.')
         
     # Configure axes
-    n_rows = int(ceil(len(metrics)/n_cols))
+    n_rows = int(np.ceil(len(metrics)/n_cols))
     fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
 
     # Record what values are best for each metric

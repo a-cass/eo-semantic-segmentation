@@ -1,5 +1,6 @@
-import numpy as np
 import os
+
+import numpy as np
 import pandas as pd
 from skimage.draw import polygon
 from skimage.io import imread, imsave

@@ -1,5 +1,6 @@
-from tensorflow.keras.callbacks import Callback
 import time
+
+from tensorflow.keras.callbacks import Callback
 
 
 class TrainingTimer(Callback):

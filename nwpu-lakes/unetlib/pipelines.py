@@ -1,7 +1,8 @@
-import tensorflow as tf
-import numpy as np
 import os
 import pickle
+
+import tensorflow as tf
+import numpy as np
 
 from .metrics import BinaryMeanIoU
 from .preprocessing import make_dataframes_for_flow, make_data_generators

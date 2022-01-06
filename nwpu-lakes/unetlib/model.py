@@ -1,11 +1,12 @@
-from tensorflow.keras.layers import (concatenate,
-                                     Conv2D,
-                                     Conv2DTranspose,
-                                     Input,
-                                     MaxPooling2D,
-                                     BatchNormalization
-                                     )
 from tensorflow.keras.activations import get as get_activation
+from tensorflow.keras.layers import (
+    concatenate,
+    Conv2D,
+    Conv2DTranspose,
+    Input,
+    MaxPooling2D,
+    BatchNormalization
+)
 from tensorflow.keras.models import Model
 
 
