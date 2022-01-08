@@ -2,7 +2,7 @@
 .DS_Store
 **.ipynb_checkpoints
 **/__pycache__
+nwpu-lakes/nwpu_lake_images
 *.jpg
-*.png
 *.h5
 .idea
